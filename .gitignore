@@ -1,0 +1,10 @@
+*.exe
+*.bat
+*.txt
+*.ch8
+*.code-workspace
+*.dll
+bin/
+include/
+SDL3/
+share/
