@@ -35,12 +35,41 @@ void DumpState(FILE* output,ParsedInst curInst,Chip8* instance){
 
 
 }
+struct ThreadData{
+    Chip8* machine;
+    SDL_AudioSpec* spec
+};
+
+int SDLCALL TimerThread(void* data){ //unfinished
+    struct ThreadData* curdata=(struct ThreadData*)data;
+    Chip8* instance=curdata->machine;
+    SDL_AudioSpec* spec=curdata->spec;
+    while(1){
+           if(instance->soundtimer!=0) {
+            
+            instance->soundtimer--;}
+           if(instance->delaytimer!=0) instance->delaytimer--;
+            SDL_Delay(16);
+        }
+    return 0;
+}
+
 int main (int argc,char* argv[]){
     Chip8 machine={0};
+ /*   SDL_Thread* thread; //unfinished
+    SDL_AudioSpec spec={0};
+    spec.freq=44100;
+    spec.format=SDL_AUDIO_F32; 
+    spec.channels=1;
+    struct ThreadData data={
+        .machine=&machine,
+        .spec=&spec,
+    }; */
     char filename[100]="default.ch8";
     for(int i=1;i<argc;i++){ //argument check for rom
         strncpy(filename,argv[i],99);
-        filename[99]=0;
+        filename[99]=0; 
+
     }
     FILE* rom=fopen(filename,"rb");
     FILE* output=fopen("output.txt","w");
@@ -62,17 +91,20 @@ int main (int argc,char* argv[]){
         Execute(&machine,test);
         SDL_Delay(600);
 }*/
-    while (machine.counter<machine.programsize+0x200){
+  //  thread=SDL_CreateThread(TimerThread,"Test",(void*)&data);
+  uint64_t ic=0;
+    while (1){
         if(CheckEvents()) break;
         RawInst curInst={0};
         curInst.instruction[0]=machine.memory[machine.counter];
         curInst.instruction[1]=machine.memory[machine.counter+1];
         SeperateNibbles(&curInst);
         ParsedInst Inst=SwitchOpcode(&curInst,&machine);
-        fprintf(stdout,"0x%03X:",machine.counter);
-        PrintInstruction(Inst,&machine,stdout);
+        //fprintf(stdout,"0x%03X:",machine.counter);
+        //PrintInstruction(Inst,&machine,stdout);
         Signal signal=Execute(&machine,Inst);
-        DumpState(output,Inst,&machine);
+        ic++;
+       // DumpState(output,Inst,&machine);
         if(signal.type==SIGNAL_DRAW){
             Render(machine.frame);
             machine.counter+=2;
@@ -81,8 +113,8 @@ int main (int argc,char* argv[]){
             machine.counter+=2;
         }
         else if(signal.type==SIGNAL_PAUSE){
-            uint8_t key=KeyPressed();
-            if(key==0) continue;
+            int8_t key=KeyPressed();
+            if(key==-1) continue;
             else {
                 *Inst.op1.value.byte=key;
                 machine.counter+=2;
@@ -100,8 +132,8 @@ int main (int argc,char* argv[]){
             }
             machine.counter+=2;
         }
-
+    
     }
-    printf("Total time elapsed:%f\n",(float)clock()/CLOCKS_PER_SEC);
+    printf("Total time elapsed:%f\nInstruction count:%llu",(float)clock()/CLOCKS_PER_SEC,ic);
     return 0;
 }

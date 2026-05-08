@@ -1,6 +1,8 @@
 #include "renderer.h"
 static SDL_Window* window=NULL;
 static SDL_Renderer* renderer=NULL;
+static const SDL_Scancode keys[16]={SDL_SCANCODE_X,SDL_SCANCODE_1,SDL_SCANCODE_2,SDL_SCANCODE_3,SDL_SCANCODE_Q,
+SDL_SCANCODE_W,SDL_SCANCODE_E,SDL_SCANCODE_A,SDL_SCANCODE_S,SDL_SCANCODE_D,SDL_SCANCODE_Z,SDL_SCANCODE_C,SDL_SCANCODE_4,SDL_SCANCODE_R,SDL_SCANCODE_F,SDL_SCANCODE_V};
 int InitSDL(int width,int height){
     if(!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)){
         fprintf(stderr,"Couldnt initialize SDL:%s",SDL_GetError());
@@ -38,23 +40,19 @@ static int FillArrayPoints(SDL_FPoint* display,const uint8_t* frame){
 }
 uint8_t IsKeyPressed(uint8_t key){
     const bool* const keyboard=SDL_GetKeyboardState(NULL);
-    if(keyboard[key+4]){
-        return 1;
-    }
-    return 0;
+    if(key>15) return 0; //guard for undefined behaviour
+    return keyboard[keys[key]];
 }
-uint8_t KeyPressed(){
+int8_t KeyPressed(){ //returns button pressed if it is pressed. returns -1 if no button has been pressed that frame
     const bool* const keyboard=SDL_GetKeyboardState(NULL);
-    for(int i=4;i<20;i++){
-        if(keyboard[i]){
-            return i-4;
+    for(int i=0;i<16;i++){
+        if(keyboard[keys[i]]){
+            return i;
         }
     }
-    return 0;
+    return -1;
 }
 int Render(const uint8_t* frame){
-    static uint8_t prevframe[64*32]={0}; //previousframe
-    static uint8_t firstframe=1; //a check for if its the first frame  
     SDL_FPoint display[64*32]={0};
     int numofPoints=FillArrayPoints(display,frame);
     SDL_SetRenderDrawColor(renderer,255,255,255,SDL_ALPHA_OPAQUE);
@@ -62,8 +60,6 @@ int Render(const uint8_t* frame){
     SDL_SetRenderDrawColor(renderer,0,0,0,SDL_ALPHA_OPAQUE);
     SDL_RenderPoints(renderer,(const SDL_FPoint*)display,numofPoints);
     SDL_RenderPresent(renderer);
-    memcpy(prevframe,frame,2048);
-    firstframe=0;
     return 0;
     
     

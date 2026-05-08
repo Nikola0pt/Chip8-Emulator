@@ -6,7 +6,7 @@ int InitSDL(int width,int height); //Initialize SDL window and renderer. Returns
 int CheckEvents(); //checks if user has requested exit of program, if so return 1, otherwise return 0 and continue
 int Render(const uint8_t*); //returns 0 (for now), ill consider making it a void
 uint8_t IsKeyPressed(uint8_t key);
-uint8_t KeyPressed();
+int8_t KeyPressed();
 
 
 

@@ -4,6 +4,7 @@
 *.ch8
 *.code-workspace
 *.dll
+*.bak
 bin/
 include/
 SDL3/
